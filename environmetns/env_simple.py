@@ -10,7 +10,7 @@ import pygame
 from gymnasium import spaces
 from gymnasium.utils import EzPickle
 
-from .player import SimpleHumanPlayer
+from environmetns.player import SimpleHumanPlayer, SimplePlayer
 
 pygame.init()
 
@@ -43,7 +43,7 @@ class SimpleEnv(gym.Env, EzPickle):
         "render_fps": FPS,
     }
 
-    def __init__(self, player, time_limit=60, render_mode: Optional[str] = None):
+    def __init__(self, player: SimplePlayer, time_limit=60, render_mode: Optional[str] = None):
         EzPickle.__init__(self, player, time_limit, render_mode)
         # pygame
         self.window = None
@@ -69,6 +69,7 @@ class SimpleEnv(gym.Env, EzPickle):
         self.time_limit = time_limit
         self.game_over = False
         self.frame_count = 0
+        self.total_reward = 0.0
 
         # colors
         self.target_color = np.array([255, 100, 100])
@@ -113,7 +114,7 @@ class SimpleEnv(gym.Env, EzPickle):
 
     def on_player_catched_target(self):
         new_target = self.generate_next_target()
-        self.player.set_next_target(new_target)
+        self.player.on_target_catched(new_target)
 
     def check_point_restricted(self, x, y):
         if x < 0 or x > STATE_W or y < 0 or y > STATE_H:
@@ -146,6 +147,10 @@ class SimpleEnv(gym.Env, EzPickle):
                          self.player.y < 0 or self.player.y > STATE_H
         return self.game_over
 
+    def check_target_catched(self):
+        dist = self.player.dist_to_target()
+        return dist <= TARGET_RADIUS
+
     def reward(self):
         dist = self.player.dist_to_target()
         reward = 0
@@ -154,8 +159,7 @@ class SimpleEnv(gym.Env, EzPickle):
         # 1. Penalty according to the distance to target
         reward -= dist / (100 * self.FPS)
         # 2. Reward if close to target
-        if dist <= TARGET_RADIUS:
-            self.on_player_catched_target()
+        if self.check_target_catched():
             reward += 100
         # 3. Penalty if out of playground
         if self.player.x < 0 or self.player.x > STATE_W or self.player.y < 0 or self.player.y > STATE_H:
@@ -166,11 +170,8 @@ class SimpleEnv(gym.Env, EzPickle):
         # 5. penalty for high angle
         if abs(self.player.a) % 180 > 30:
             reward -= 10
-        # 6. penalty if too close to border
-        if self.player.x < STATE_BORDER or \
-                self.player.y < STATE_BORDER or \
-                self.player.x > STATE_W - STATE_BORDER or \
-                self.player.y > STATE_H - STATE_BORDER:
+        # 6. penalty if on restricted zone
+        if self.check_point_restricted(*self.player.current_xy()):
             reward -= 5
         return reward
 
@@ -178,6 +179,8 @@ class SimpleEnv(gym.Env, EzPickle):
         self.time += self.dt
         # update current player
         self.player.update(action)
+        if self.check_target_catched():
+            self.on_player_catched_target()
         if not self.game_over:
             self.player.move(self.dt)
             # check round over
@@ -185,6 +188,7 @@ class SimpleEnv(gym.Env, EzPickle):
 
         state = self.get_obs()
         reward = self.reward()
+        self.total_reward += reward
         done = self.game_over
         return state, reward, done, False, {}
 
@@ -192,6 +196,7 @@ class SimpleEnv(gym.Env, EzPickle):
         self.game_over = False
         self.time = 0
         self.frame_count = 0
+        self.total_reward = 0.0
 
         x, y = int(STATE_W / 2), int(STATE_H / 2)
         self.player.reset_player(
@@ -199,6 +204,7 @@ class SimpleEnv(gym.Env, EzPickle):
             current_target=self.generate_next_target(),
             next_target=self.generate_next_target()
         )
+        self.background_cache = self.static_background()
 
         return self.get_obs(), {}
 
@@ -211,7 +217,7 @@ class SimpleEnv(gym.Env, EzPickle):
         pygame.draw.circle(canvas, self.next_target_color, target2_center, TARGET_RADIUS)
 
         # Actor
-        actor_xy = (actor.x, actor.y)
+        actor_xy = actor.current_xy()
         # actor_asset_rotated = pygame.transform.rotate(actor.player_asset, actor.a)
         pygame.draw.rect(canvas, self.player_color, (actor_xy, (1, 1)), 1)
 
@@ -223,10 +229,12 @@ class SimpleEnv(gym.Env, EzPickle):
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(pygame.transform.scale(canvas, (WINDOW_W, WINDOW_H)), (0, 0))
 
-            textsurface = self.myfont.render(f"Collected: {self.player.target_counter}", False, self.font_color)
-            self.window.blit(textsurface, (20, 20))
-            textsurface3 = self.myfont.render(f"Time: {int(self.time)}", False, self.font_color)
-            self.window.blit(textsurface3, (20, 50))
+            textsurface1 = self.myfont.render(f"Time: {int(self.time)}", False, self.font_color)
+            self.window.blit(textsurface1, (20, 20))
+            textsurface2 = self.myfont.render(f"Total reward: {int(self.total_reward)}", False, self.font_color)
+            self.window.blit(textsurface2, (WINDOW_W / 3, 20))
+            textsurface3 = self.myfont.render(f"Collected: {self.player.target_counter}", False, self.font_color)
+            self.window.blit(textsurface3, (WINDOW_W / 4 * 3, 20))
 
             pygame.event.pump()
             pygame.display.update()
@@ -249,6 +257,6 @@ if __name__ == '__main__':
         obs, reward, done, terminated, info = env.step(action)
         env.render()
 
-        print(f'{reward}')
+        # print(f'{reward}')
 
     print(f"Terminated at {env.frame_count} frame")

@@ -68,9 +68,12 @@ class SimplePlayer:
     def next_target_xy(self):
         return self.next_target.x, self.next_target.y
 
-    def set_next_target(self, target):
+    def current_xy(self):
+        return self.x, self.y
+
+    def on_target_catched(self, new_target):
         self.current_target = self.next_target
-        self.next_target = target
+        self.next_target = new_target
         self.target_counter += 1
 
     def update(self, action):

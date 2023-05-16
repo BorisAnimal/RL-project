@@ -49,32 +49,33 @@ final_model.save("sac_model_simple_final_v2")
 
 
 # Create PPO agent
-model = PPO(
-    "MlpPolicy",
-    env,
-    # buffer_size=10_000,
-    # learning_starts=5_000,
-    # batch_size=128,
-    ent_coef=0.1,
-    verbose=1,
-    tensorboard_log=log_dir,
-    policy_kwargs=dict(normalize_images=False)
-)
-
-# Create checkpoint callback
-checkpoint_callback = CheckpointCallback(
-    save_freq=10000, save_path=log_dir, name_prefix="ppo_cnn_model_simple_v2"
-)
-
-# Train the agent
-final_model = model.learn(
-    total_timesteps=20_000_000,
-    callback=[
-        checkpoint_callback
-    ],
-)
-
-final_model.save("ppo_model_simple_final_v2")
+# model = PPO(
+#     "MlpPolicy",
+#     env,
+#     # buffer_size=10_000,
+#     # learning_starts=5_000,
+#     # batch_size=128,
+#     ent_coef=0.1,
+#     verbose=1,
+#     tensorboard_log=log_dir,
+#     policy_kwargs=dict(normalize_images=False)
+# )
+#
+# # Create checkpoint callback
+# checkpoint_callback = CheckpointCallback(
+#     save_freq=10000, save_path=log_dir, name_prefix="ppo_cnn_model_simple_v2"
+# )
+#
+# # Train the agent
+# final_model = model.learn(
+#     total_timesteps=20_000_000,
+#     callback=[
+#         checkpoint_callback
+#     ],
+# )
+#
+# final_model.save("ppo_model_simple_final_v2")
 
 if __name__ == '__main__':
+    # TODO: check if can parse training logs for plots in report
     pass
