@@ -1,0 +1,6 @@
+numpy
+pygame
+stable-baselines3>=2.0.0a5
+wandb
+tensorboard
+gymnasium~=0.28.1

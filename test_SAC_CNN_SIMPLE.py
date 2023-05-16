@@ -5,19 +5,20 @@ Test a trained SAC agent on the SimpleEnv environment
 from stable_baselines3 import SAC, PPO
 from stable_baselines3.common.vec_env import VecFrameStack, DummyVecEnv
 
-from simple_env import SimpleEnv
-from simple_player import SimplePlayer
+from environmetns.env_maze import MazeEnv
+from environmetns.env_simple import SimpleEnv
+from environmetns.player import SimplePlayer
 
 MODEL_PATH = "models/sac_simple_pretrained_model_20000000_steps.zip"
 
 # Create and wrap the environment
-env = DummyVecEnv([lambda: SimpleEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
+# environmetns = DummyVecEnv([lambda: SimpleEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
+env = DummyVecEnv([lambda: MazeEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
 
 if __name__ == '__main__':
     # Evaluate the agent
     # Load the trained agent
-    # model = SAC.load(MODEL_PATH, env=env)
-    model = PPO.load(MODEL_PATH, env=env)
+    model = SAC.load(MODEL_PATH, env=env)
     for i in range(10):
         obs = env.reset()
         done = False

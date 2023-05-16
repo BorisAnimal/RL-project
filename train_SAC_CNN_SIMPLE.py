@@ -8,15 +8,16 @@ from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import VecFrameStack, SubprocVecEnv
 
-from simple_env import SimpleEnv
-from simple_player import SimplePlayer
 
 # Create log dir
+from environmetns.env_simple import SimpleEnv
+from environmetns.player import SimplePlayer
+
 log_dir = "tmp/"
 os.makedirs(log_dir, exist_ok=True)
 
 env = make_vec_env(lambda: Monitor(SimpleEnv(player=SimplePlayer()), log_dir), n_envs=16)
-# env = VecFrameStack(env, n_stack=5)
+# environmetns = VecFrameStack(environmetns, n_stack=5)
 
 
 # Create SAC agent
