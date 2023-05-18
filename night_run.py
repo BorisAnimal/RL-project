@@ -90,5 +90,40 @@ final_model = model.learn(
 
 final_model.save("sac_model_dynamic_pretrained_final")
 
+
+
+########################## finetune dynamic TODO:delete 20M ###############################
+def create_env():
+    env = DynamicEnv(player=SimplePlayer(ray_range=4))
+    env.RESTRICTED_ZONE_REWARD = -100
+    return Monitor(env, log_dir)
+
+
+env = make_vec_env(create_env, n_envs=16)
+
+# Create SAC agent
+model = SAC(
+    "MlpPolicy",
+    env,
+    # buffer_size=10_000,
+    # learning_starts=5_000,
+    # batch_size=128,
+    verbose=1,
+    tensorboard_log=log_dir
+)
+
+# Create checkpoint callback
+checkpoint_callback = CheckpointCallback(
+    save_freq=10_000, save_path=log_dir, name_prefix="sac_dynamic_model_v2"
+)
+
+# Train the agent
+final_model = model.learn(
+    total_timesteps=10_000_000,
+    callback=[
+        checkpoint_callback
+    ],
+)
+
 if __name__ == '__main__':
     pass
