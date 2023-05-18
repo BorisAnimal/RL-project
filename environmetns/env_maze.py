@@ -26,7 +26,6 @@ class MazeEnv(SimpleEnv):
         return canvas
 
     def _draw_wall(self, canvas, x1, y1, w, h):
-        print(f"Rect: {(x1, y1, w, h)}")
         canvas.fill(
             self.restricted_background_color,
             # left,top,w,h

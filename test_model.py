@@ -10,12 +10,14 @@ from environmetns.env_maze import MazeEnv
 from environmetns.env_simple import SimpleEnv
 from environmetns.player import SimplePlayer
 
-MODEL_PATH = "models/sac_simple_pretrained_model_20000000_steps.zip"
+# MODEL_PATH = "models/sac_simple_pretrained_model_20000000_steps.zip"
+# MODEL_PATH = "tmp/sac_dynamic_pretrained_model_1600000_steps.zip"
+MODEL_PATH = "models/sac_maze_pretrained_model_9760000_steps.zip"
 
 # Create and wrap the environment
 # environmetns = DummyVecEnv([lambda: SimpleEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
-# env = DummyVecEnv([lambda: MazeEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
-env = DummyVecEnv([lambda: DynamicEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
+env = DummyVecEnv([lambda: MazeEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
+# env = DummyVecEnv([lambda: DynamicEnv(player=SimplePlayer(), time_limit=30, render_mode='human')])
 
 if __name__ == '__main__':
     # Evaluate the agent

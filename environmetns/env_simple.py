@@ -43,6 +43,13 @@ class SimpleEnv(gym.Env, EzPickle):
         "render_fps": FPS,
     }
 
+    DIST_REWARD_COEF = -1 / 100
+    TARGET_REWARD = 100
+    OUT_OF_BOUND_REWARD = -1000
+    HIGH_SPEED_REWARD = -10
+    HIGH_ANGLE_REWARD = -10
+    RESTRICTED_ZONE_REWARD = -5
+
     def __init__(self, player: SimplePlayer, time_limit=60, render_mode: Optional[str] = None):
         EzPickle.__init__(self, player, time_limit, render_mode)
         # pygame
@@ -154,25 +161,23 @@ class SimpleEnv(gym.Env, EzPickle):
     def reward(self):
         dist = self.player.dist_to_target()
         reward = 0
-        # 0. Reward per step survived
-        # reward += 1 / self.FPS
         # 1. Penalty according to the distance to target
-        reward -= dist / (100 * self.FPS)
+        reward += self.DIST_REWARD_COEF * dist / self.FPS
         # 2. Reward if close to target
         if self.check_target_catched():
-            reward += 100
+            reward += self.TARGET_REWARD
         # 3. Penalty if out of playground
         if self.player.x < 0 or self.player.x > STATE_W or self.player.y < 0 or self.player.y > STATE_H:
-            reward -= 1000
+            reward += self.OUT_OF_BOUND_REWARD
         # 4. Penalty if too high speed
         if abs(self.player.ad) > 5 or abs(self.player.xd) > 40 or abs(self.player.yd) > 40:
-            reward -= 10
+            reward += self.HIGH_SPEED_REWARD
         # 5. penalty for high angle
         if abs(self.player.a) % 180 > 30:
-            reward -= 10
+            reward += self.HIGH_ANGLE_REWARD
         # 6. penalty if on restricted zone
         if self.check_point_restricted(*self.player.current_xy()):
-            reward -= 5
+            reward += self.RESTRICTED_ZONE_REWARD
         return reward
 
     def step(self, action):
