@@ -90,6 +90,7 @@ class SimpleEnv(gym.Env, EzPickle):
 
         # Init agents
         self.player = player
+        self.trajectory_cache = []
 
         # gym
         self.action_space = self.player.action_space
@@ -202,6 +203,7 @@ class SimpleEnv(gym.Env, EzPickle):
         self.time = 0
         self.frame_count = 0
         self.total_reward = 0.0
+        self.trajectory_cache = []
 
         x, y = int(STATE_W / 2), int(STATE_H / 2)
         self.player.reset_player(
@@ -224,13 +226,18 @@ class SimpleEnv(gym.Env, EzPickle):
         # Actor
         actor_xy = actor.current_xy()
         # actor_asset_rotated = pygame.transform.rotate(actor.player_asset, actor.a)
-        pygame.draw.rect(canvas, self.player_color, (actor_xy, (1, 1)), 1)
+        if self.frame_count % 5 == 0:
+            self.trajectory_cache.append(actor_xy)
+        pygame.draw.rect(canvas, self.player_color, ((actor_xy[0]-1, actor_xy[1]-1), (3, 3)), 3)
 
     def render(self, mode=None):
         canvas = self.background_cache.copy()
         self.render_actor_and_target(canvas, self.player)
 
         if self.render_mode == "human":
+            for point in self.trajectory_cache:
+                pygame.draw.rect(canvas, self.player_color, (point, (1, 1)), 1)
+
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(pygame.transform.scale(canvas, (WINDOW_W, WINDOW_H)), (0, 0))
 
